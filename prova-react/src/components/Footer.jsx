@@ -1,9 +1,8 @@
 function Footer() {
   return (
     <footer>
-      <p>Fatec 2026</p>
+      <p>Guilherme Pedroso - 14/04/2026</p>
     </footer>
   )
 }
-
 export default Footer
