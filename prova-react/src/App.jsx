@@ -1,41 +1,122 @@
 import { useState, useEffect } from "react"
+import { auth, db } from "./firebase"
 import StatusBar from "./components/StatusBar"
 import Footer from "./components/Footer"
 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "firebase/auth"
+
+import {
+  collection,
+  addDoc,
+  getDocs
+} from "firebase/firestore"
+
 function App() {
 
-  const [alunos, setAlunos] = useState([
-    { nome: "Guilherme", curso: "DSM" },
-    { nome: "Danilo", curso: "ADS" }
-  ])
+  
+  const [email, setEmail] = useState("")
+  const [senha, setSenha] = useState("")
+  const [usuario, setUsuario] = useState(null)
 
+  
   const [nome, setNome] = useState("")
   const [curso, setCurso] = useState("")
+  const [alunos, setAlunos] = useState([])
 
-  useEffect(() => {
-    console.log("Aplicação carregada!")
-  }, [])
 
-  function adicionarAluno() {
+  function cadastrar() {
+    createUserWithEmailAndPassword(auth, email, senha)
+      .then(() => alert("Cadastrado!"))
+      .catch(() => alert("Erro ao cadastrar"))
+  }
 
+  
+  function login() {
+    signInWithEmailAndPassword(auth, email, senha)
+      .then((user) => {
+        setUsuario(user.user)
+        alert("Logado!")
+      })
+      .catch(() => alert("Erro no login"))
+  }
+
+  
+  function sair() {
+    signOut(auth)
+    setUsuario(null)
+  }
+
+  
+  async function adicionarAluno() {
     if (!nome || !curso) {
-      alert("Preencha todos os campos")
+      alert("Preencha tudo")
       return
     }
 
-    const novoAluno = {
-      nome: nome,
-      curso: curso
-    }
-
-    setAlunos([...alunos, novoAluno])
+    await addDoc(collection(db, "alunos"), {
+      nome,
+      curso
+    })
 
     setNome("")
     setCurso("")
+    buscarAlunos()
   }
 
+  
+  async function buscarAlunos() {
+    const dados = await getDocs(collection(db, "alunos"))
+    const lista = dados.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    setAlunos(lista)
+  }
+
+  useEffect(() => {
+    buscarAlunos()
+  }, [])
+
+  
+  if (!usuario) {
+    return (
+      <div style={{ textAlign: "center" }}>
+
+        <StatusBar mensagem="Sistema Acadêmico" />
+
+        <h2>Login</h2>
+
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          placeholder="Senha"
+          type="password"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+        />
+
+        <br /><br />
+
+        <button onClick={cadastrar}>Cadastrar</button>
+        <button onClick={login}>Login</button>
+
+        <Footer />
+
+      </div>
+    )
+  }
+
+  
   return (
-    <div>
+    <div style={{ textAlign: "center", minHeight: "100vh" }}>
 
       <StatusBar mensagem="Sistema Acadêmico" />
 
@@ -46,16 +127,17 @@ function App() {
 
       <h2>Lista de Alunos</h2>
 
-      {/* INPUTS */}
-      <input 
-        type="text" 
+      <button onClick={sair}>Logout</button>
+
+      <br /><br />
+
+      <input
         placeholder="Nome"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
       />
 
-      <input 
-        type="text" 
+      <input
         placeholder="Curso"
         value={curso}
         onChange={(e) => setCurso(e.target.value)}
@@ -63,18 +145,14 @@ function App() {
 
       <br /><br />
 
-      {/* BOTÃO */}
-      <button onClick={adicionarAluno}>
-        Adicionar Aluno
-      </button>
+      <button onClick={adicionarAluno}>Salvar</button>
 
       <hr />
 
-      {/* LISTA */}
-      {alunos.map((aluno, index) => (
-        <div key={index}>
-          <p>{aluno.nome} - {aluno.curso}</p>
-        </div>
+      {alunos.map((a) => (
+        <p key={a.id}>
+          {a.nome} - {a.curso}
+        </p>
       ))}
 
       <Footer />
