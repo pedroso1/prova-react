@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react"
 import { auth, db } from "./firebase"
+import { supabase } from "./supabase"
+
 import StatusBar from "./components/StatusBar"
 import Footer from "./components/Footer"
 
@@ -27,7 +29,14 @@ function App() {
   const [curso, setCurso] = useState("")
   const [alunos, setAlunos] = useState([])
 
+  
+  const [imagem, setImagem] = useState(null)
 
+  useEffect(() => {
+    buscarAlunos()
+  }, [])
+
+  
   function cadastrar() {
     createUserWithEmailAndPassword(auth, email, senha)
       .then(() => alert("Cadastrado!"))
@@ -50,51 +59,76 @@ function App() {
     setUsuario(null)
   }
 
-  
+ 
   async function adicionarAluno() {
+
     if (!nome || !curso) {
       alert("Preencha tudo")
       return
     }
 
+    let urlImagem = ""
+
+  
+    if (imagem) {
+
+      const nomeArquivo = Date.now() + imagem.name
+
+      const { error } = await supabase.storage
+        .from("imagens")
+        .upload(nomeArquivo, imagem)
+
+      if (!error) {
+
+        const { data } = supabase.storage
+          .from("imagens")
+          .getPublicUrl(nomeArquivo)
+
+        urlImagem = data.publicUrl
+      }
+    }
+
+  
     await addDoc(collection(db, "alunos"), {
       nome,
-      curso
+      curso,
+      imagem: urlImagem
     })
 
     setNome("")
     setCurso("")
+    setImagem(null)
+
     buscarAlunos()
   }
 
-  
+
   async function buscarAlunos() {
+
     const dados = await getDocs(collection(db, "alunos"))
+
     const lista = dados.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
+
     setAlunos(lista)
   }
 
-  useEffect(() => {
-    buscarAlunos()
-  }, [])
 
-  
   if (!usuario) {
     return (
       <div style={{ textAlign: "center" }}>
 
-        <StatusBar mensagem="Sistema Acadêmico" />
-
-        <h2>Login</h2>
+        <h1>Login</h1>
 
         <input
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+
+        <br /><br />
 
         <input
           placeholder="Senha"
@@ -105,29 +139,34 @@ function App() {
 
         <br /><br />
 
-        <button onClick={cadastrar}>Cadastrar</button>
-        <button onClick={login}>Login</button>
+        <button onClick={cadastrar}>
+          Cadastrar
+        </button>
 
-        <Footer />
+        <button onClick={login}>
+          Login
+        </button>
 
       </div>
     )
   }
 
-  
+ 
   return (
-    <div style={{ textAlign: "center", minHeight: "100vh" }}>
+    <div style={{ textAlign: "center" }}>
 
       <StatusBar mensagem="Sistema Acadêmico" />
 
-      <img 
-        src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" 
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png"
         width="150"
       />
 
       <h2>Lista de Alunos</h2>
 
-      <button onClick={sair}>Logout</button>
+      <button onClick={sair}>
+        Logout
+      </button>
 
       <br /><br />
 
@@ -145,14 +184,34 @@ function App() {
 
       <br /><br />
 
-      <button onClick={adicionarAluno}>Salvar</button>
+      <input
+        type="file"
+        onChange={(e) => setImagem(e.target.files[0])}
+      />
+
+      <br /><br />
+
+      <button onClick={adicionarAluno}>
+        Salvar
+      </button>
 
       <hr />
 
       {alunos.map((a) => (
-        <p key={a.id}>
-          {a.nome} - {a.curso}
-        </p>
+        <div key={a.id}>
+
+          <p>
+            {a.nome} - {a.curso}
+          </p>
+
+          {a.imagem && (
+            <img
+              src={a.imagem}
+              width="100"
+            />
+          )}
+
+        </div>
       ))}
 
       <Footer />
