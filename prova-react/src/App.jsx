@@ -26,8 +26,8 @@ function App() {
 
   
   const [nome, setNome] = useState("")
-  const [curso, setCurso] = useState("")
-  const [alunos, setAlunos] = useState([])
+  
+  const [personagens, setPersonagens] = useState([])
 
   
   const [imagem, setImagem] = useState(null)
@@ -62,7 +62,7 @@ function App() {
  
   async function adicionarAluno() {
 
-    if (!nome || !curso) {
+    if (!nome || !imagem) {
       alert("Preencha tudo")
       return
     }
@@ -89,14 +89,14 @@ function App() {
     }
 
   
-    await addDoc(collection(db, "alunos"), {
+    await addDoc(collection(db, "personagens"), {
       nome,
-      curso,
-      imagem: urlImagem
+      imagem: urlImagem,
+      dataCadastro: new Date().toLocaleDateString()
     })
 
     setNome("")
-    setCurso("")
+    
     setImagem(null)
 
     buscarAlunos()
@@ -105,14 +105,14 @@ function App() {
 
   async function buscarAlunos() {
 
-    const dados = await getDocs(collection(db, "alunos"))
+  const dados = await getDocs(collection(db, "personagens"))
 
     const lista = dados.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
 
-    setAlunos(lista)
+    setPersonagens(lista)
   }
 
 
@@ -162,7 +162,7 @@ function App() {
         width="150"
       />
 
-      <h2>Lista de Alunos</h2>
+    <h2>Personagens Marvel</h2>
 
       <button onClick={sair}>
         Logout
@@ -174,12 +174,6 @@ function App() {
         placeholder="Nome"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
-      />
-
-      <input
-        placeholder="Curso"
-        value={curso}
-        onChange={(e) => setCurso(e.target.value)}
       />
 
       <br /><br />
@@ -197,12 +191,12 @@ function App() {
 
       <hr />
 
-      {alunos.map((a) => (
+      {personagens.map((a) => (
         <div key={a.id}>
 
-          <p>
-            {a.nome} - {a.curso}
-          </p>
+   <p>{a.nome}</p>
+
+  <p>{a.dataCadastro}</p>
 
           {a.imagem && (
             <img
