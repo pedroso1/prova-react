@@ -153,15 +153,26 @@ function App() {
 
  
   return (
-    <div style={{ textAlign: "center" }}>
+    <div
+      style={{
+        textAlign: "center",
+        minHeight: "100vh",
+        backgroundColor: "#0b0f1a",
+        color: "white",
+        padding: "20px"
+      }}
+    >
 
-      <StatusBar mensagem="Sistema Acadêmico" />
+      <StatusBar mensagem="Marvel Heroes" />
 
-      <img
-        src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png"
-        width="150"
-      />
-
+        <img
+        src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Marvel_Logo.svg"
+        width="180"
+        style={{
+       marginTop: "20px",
+        marginBottom: "10px"
+     }}
+/>
     <h2>Personagens Marvel</h2>
 
       <button onClick={sair}>
